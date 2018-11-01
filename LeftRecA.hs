@@ -1,3 +1,5 @@
+--Lucas Manker
+
 module LeftRecA where
 
 import Data.List
