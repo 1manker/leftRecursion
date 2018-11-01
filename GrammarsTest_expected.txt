@@ -1,0 +1,67 @@
+
+*Grammars> :l Grammars.hs 
+[1 of 6] Compiling GrammarDef       ( GrammarDef.hs, interpreted )
+[2 of 6] Compiling LeftRecA         ( LeftRecA.hs, interpreted )
+[3 of 6] Compiling Parser           ( Parser.hs, interpreted )
+[4 of 6] Compiling GrammarParser    ( GrammarParser.hs, interpreted )
+[5 of 6] Compiling GrammarTests     ( GrammarTests.hs, interpreted )
+[6 of 6] Compiling Grammars         ( Grammars.hs, interpreted )
+Ok, 6 modules loaded.
+*Grammars> test1
+G "Lambda" [P "TERM" [[T "var"],[NT "TERM",NT "TERM"],[T "Lambda",T "var",T "->",NT "TERM"]]]
+*Grammars> putStr $ pretty $ test1
+Lambda{
+TERM => var | TERM TERM | Lambda var -> TERM
+}
+*Grammars> putStr $ pretty $ eliminate_left_recursion test1
+Lambda{
+TERM => var | var TERM' | Lambda var -> TERM | Lambda var -> TERM TERM'
+TERM' => var | var TERM' | Lambda var -> TERM | Lambda var -> TERM TERM' | var TERM' TERM' | Lambda var -> TERM TERM' TERM'
+}
+*Grammars> 
+*Grammars> test2
+G "A" [P "A" [[NT "A",NT "A",NT "A"],[NT "B",T "foo"],[T "boo"]],P "B" [[NT "A"],[T "goo",NT "A"]]]
+*Grammars> putStr $ pretty $ test2
+A{
+A => A A A | B foo | boo
+B => A | goo A
+}
+*Grammars> putStr $ pretty $ eliminate_left_recursion test2
+A{
+A => B foo | B foo A' | boo | boo A'
+A' => B foo A | B foo A' A | boo A | boo A' A | B foo A A' | B foo A' A A' | boo A A' | boo A' A A'
+B => boo | boo B' | boo A' | boo A' B' | goo A | goo A B'
+B' => foo | foo B' | foo A' | foo A' B'
+}
+*Grammars> test3
+G "S_indirect" [P "S" [[NT "A",T "a"],[T "b"]],P "A" [[NT "A",T "c"],[NT "S",T "d"],[T "e"]]]
+*Grammars> 
+*Grammars> putStr $ pretty $ test3
+S_indirect{
+S => A a | b
+A => A c | S d | e
+}
+*Grammars> putStr $ pretty $ eliminate_left_recursion test3
+S_indirect{
+S => A a | b
+A => b d | b d A' | e | e A'
+A' => a d | a d A' | c | c A'
+}
+*Grammars> gtest1
+"Sindirect {S -> A a | b, A -> A c | S d | e}"
+*Grammars> fullParse grammarP gtest1
+G "Sindirect" [P "S" [[NT "A",T "a"],[T "b"]],P "A" [[NT "A",T "c"],[NT "S",T "d"],[T "e"]]]
+*Grammars> putStr $ pretty $ fullParse grammarP gtest1
+Sindirect{
+S => A a | b
+A => A c | S d | e
+}
+*Grammars> putStr $ pretty $ eliminate_left_recursion $ fullParse grammarP gtest1
+Sindirect{
+S => A a | b
+A => b d | b d A' | e | e A'
+A' => a d | a d A' | c | c A'
+}
+*Grammars> 
+
+
